@@ -6,7 +6,7 @@ import time
 from io import BytesIO
 
 import keyboard
-import pyscreenshot as ImageGrab
+from PIL import ImageGrab
 
 def take_screenshot():
     image = ImageGrab.grab().convert("L").resize((256, 144))
@@ -16,9 +16,6 @@ def take_screenshot():
 
 def check_keypresses():
     out = []
-
-    if keyboard.is_pressed('down'):
-        out.append('down')
 
     if keyboard.is_pressed('left'):
         out.append('left')

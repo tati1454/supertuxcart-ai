@@ -29,7 +29,6 @@ class ModelTrainer():
             loss_total += loss
 
             current = batch * len(X)
-            self.writer.add_scalar("Loss/Test/Batch", loss, batch)
             print("\rTesting... ", current, "/", size, end="")
 
         print("\nTest avg: ", loss_total / len(self.test_dataloader))
@@ -54,8 +53,6 @@ class ModelTrainer():
             
             loss, current = loss.item(), batch * len(X)
             print(f"\rloss: {loss:>7f}  [{current:>5d}/{size:>5d}]", end="")
-
-            self.writer.add_scalar("Loss/Train/Batch", loss, batch)
 
             total_loss += loss
         

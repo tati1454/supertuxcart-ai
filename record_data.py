@@ -2,7 +2,9 @@ import argparse
 import base64
 import json
 import sys
+import os
 import time
+import random
 from io import BytesIO
 
 import keyboard
@@ -48,7 +50,8 @@ def get_sample(pressed_keys):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Record data for training")
-    parser.add_argument('output_file', metavar='output', type=str, nargs=1, help='Output filename')
+    parser.add_argument('dataset_folder', metavar='output', type=str, nargs=1, help='Output folder')
+    parser.add_argument('--test-data-amount', type=int, nargs=1, required=True, help='Specify the porcentage of test data the dataset will have')
     args = parser.parse_args()
 
     data = []
@@ -65,7 +68,38 @@ if __name__ == '__main__':
         
             data.append(sample)
             time.sleep(0.1)
+
     except KeyboardInterrupt:
-        print("Quitting...")
-        with open(args.output_file[0], "w") as output_file:
-            output_file.write(json.dumps(data))
+        print("Saving dataset...")
+        random.shuffle(data)
+
+        testing_data = data[:round(len(data) * (args.test_data_amount[0] / 100))]
+        training_data = data[round(len(data) * (args.test_data_amount[0] / 100)):]
+
+        if not os.path.exists(args.dataset_folder[0]):
+            os.mkdir(args.dataset_folder[0])
+
+        if not os.path.exists(args.dataset_folder[0] + "/training"):
+            os.mkdir(args.dataset_folder[0] + "/training")
+
+        if not os.path.exists(args.dataset_folder[0] + "/testing"):
+            os.mkdir(args.dataset_folder[0] + "/testing")
+
+        training_capture_filename = None
+        testing_capture_filename = None
+
+        i = 1
+        while os.path.exists(args.dataset_folder[0] + f"/training/capture{i}.json"):
+            i += 1
+        training_capture_filename = args.dataset_folder[0] + f"/training/capture{i}.json"
+
+        i = 1
+        while os.path.exists(args.dataset_folder[0] + f"/testing/capture{i}.json"):
+            i += 1
+        testing_capture_filename = args.dataset_folder[0] + f"/testing/capture{i}.json"
+
+        with open(training_capture_filename, "w") as training_capture_file:
+            json.dump(training_data, training_capture_file)
+
+        with open(testing_capture_filename, "w") as testing_capture_file:
+            json.dump(testing_data, testing_capture_file)

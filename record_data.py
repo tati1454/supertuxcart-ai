@@ -25,25 +25,19 @@ def check_keypresses():
     if keyboard.is_pressed('right'):
         out.append('right')
 
-    if keyboard.is_pressed('down'):
-        out.append('down')
-
-    if keyboard.is_pressed('up'):
-        out.append('up')
-
     return out
 
 def get_sample(pressed_keys): 
-    expected = [0, 0, 0, 0]
+    expected = [0, 0, 0]
 
     if 'left' in pressed_keys:
         expected[0] = 1
-    if 'right' in pressed_keys:
+
+    elif 'right' in pressed_keys:
         expected[1] = 1
-    if 'up' in pressed_keys:
+
+    else:
         expected[2] = 1
-    if 'down' in pressed_keys:
-        expected[3] = 1
 
     return {"frame": take_screenshot(), "expected": expected}
 
@@ -52,7 +46,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Record data for training")
     parser.add_argument('dataset_folder', metavar='output', type=str, nargs=1, help='Output folder')
     parser.add_argument('--test-data-amount', type=int, nargs=1, required=True, help='Specify the porcentage of test data the dataset will have')
-    parser.add_argument('--ignore-alone-arrow-up', action="store_true", help='Ignore all captures containing just arrow up keys alone')
+    parser.add_argument('--only-left-right', action="store_true", default=False, help='Ignore straight samples.')
     args = parser.parse_args()
 
     data = []
@@ -64,11 +58,10 @@ if __name__ == '__main__':
             pressed_keys = check_keypresses()
 
             sample = get_sample(pressed_keys)
-            if sample["expected"] == [0, 0, 0, 0]:
-                continue
-            if(args.ignore_alone_arrow_up and sample["expected"] == [0, 0, 1, 0]):
-                continue
-        
+            if args.only_left_right:
+                if sample["expected"][2] == 1:
+                    continue
+
             data.append(sample)
             time.sleep(0.1)
 

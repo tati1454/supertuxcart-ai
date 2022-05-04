@@ -3,7 +3,7 @@ import numpy
 
 dataset = model.TuxDriverDataset("./dataset/training")
 
-accumulator = numpy.array([0, 0, 0, 0])
+accumulator = numpy.array([0, 0, 0])
 empty_samples = 0
 
 for data in dataset:
@@ -12,6 +12,7 @@ for data in dataset:
         empty_samples += 1
     else:
         accumulator = numpy.add(accumulator, sample)
+
     print("\r", accumulator, end="")
 
 print("\r", accumulator)

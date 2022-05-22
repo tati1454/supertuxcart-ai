@@ -1,20 +1,12 @@
 import argparse
-import base64
 import json
-import sys
 import os
 import time
 import random
-from io import BytesIO
 
 import keyboard
-from PIL import ImageGrab
 
-def take_screenshot():
-    image = ImageGrab.grab().convert("L").resize((256, 144))
-    stream = BytesIO()
-    image.save(stream, format="JPEG")
-    return base64.b64encode(stream.getvalue()).decode()
+from screenshot import take_screenshot, get_window_by_name
 
 def check_keypresses():
     out = []
@@ -27,7 +19,7 @@ def check_keypresses():
 
     return out
 
-def get_sample(pressed_keys): 
+def get_sample(game_window, pressed_keys):
     expected = [0, 0, 0]
 
     if 'left' in pressed_keys:
@@ -39,13 +31,14 @@ def get_sample(pressed_keys):
     else:
         expected[2] = 1
 
-    return {"frame": take_screenshot(), "expected": expected}
+    return {"frame": take_screenshot(game_window, convert_to_base64=True), "expected": expected}
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Record data for training")
     parser.add_argument('dataset_folder', metavar='output', type=str, nargs=1, help='Output folder')
     parser.add_argument('--test-data-amount', type=int, nargs=1, required=True, help='Specify the porcentage of test data the dataset will have')
+    parser.add_argument('--game-window', type=str, required=False, help='Name of the window to capture, by default it will capture the entire screen')
     parser.add_argument('--only-left-right', action="store_true", default=False, help='Ignore straight samples.')
     args = parser.parse_args()
 
@@ -56,8 +49,16 @@ if __name__ == '__main__':
         print("Capturing data...")
         while True:
             pressed_keys = check_keypresses()
+            game_window = None
 
-            sample = get_sample(pressed_keys)
+            if args.game_window is None:
+                game_window = get_window_by_name("root")
+            else:
+                game_window = get_window_by_name(args.game_window)
+                if game_window is None:
+                    print(f"Couldn't find window {args.game_window}")
+                    exit()
+            sample = get_sample(game_window, pressed_keys)
             if args.only_left_right:
                 if sample["expected"][2] == 1:
                     continue
